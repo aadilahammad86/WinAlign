@@ -1,0 +1,23 @@
+## Build results
+[Bb]in/
+[Oo]bj/
+dist/
+publish/
+installer_bin/
+installer_out/
+payload.zip
+*.zip
+
+## Visual Studio / VS Code
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## OS Generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/

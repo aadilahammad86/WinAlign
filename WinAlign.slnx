@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WinAlign.Core/WinAlign.Core.csproj" />
+    <Project Path="src/WinAlign.Installer/WinAlign.Installer.csproj" />
+    <Project Path="src/WinAlign.UI/WinAlign.UI.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WinAlign.Tests/WinAlign.Tests.csproj" />
+  </Folder>
+</Solution>

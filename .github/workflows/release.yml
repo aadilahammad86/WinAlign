@@ -1,0 +1,70 @@
+name: Build & Release WinAlign
+
+on:
+  push:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build, Test & Publish Release
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          include-prerelease: true
+
+      - name: Run Automated Tests
+        run: dotnet test WinAlign.slnx --configuration Release --verbosity normal
+
+      - name: Publish WinAlign UI
+        run: dotnet publish src/WinAlign.UI/WinAlign.UI.csproj -c Release -o dist
+
+      - name: Package Payload for Installer
+        shell: pwsh
+        run: Compress-Archive -Path dist/* -DestinationPath payload.zip -Force
+
+      - name: Build Standalone Installer
+        run: dotnet publish src/WinAlign.Installer/WinAlign.Installer.csproj -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true -o installer_out
+
+      - name: Prepare Release Artifacts
+        shell: pwsh
+        run: |
+          Copy-Item installer_out/WinAlign.Installer.exe WinAlign-Setup.exe
+          Compress-Archive -Path dist/* -DestinationPath WinAlign-Portable.zip -Force
+          Get-FileHash WinAlign-Setup.exe, WinAlign-Portable.zip -Algorithm SHA256 | Out-File checksums.txt
+
+      - name: Create Versioned GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: WinAlign v1.0.${{ github.run_number }}
+          body: |
+            ## WinAlign v1.0.${{ github.run_number }}
+            
+            Automated release generated from commit `${{ github.sha }}` on branch `${{ github.ref_name }}`.
+            
+            ### Included Assets:
+            - **`WinAlign-Setup.exe`**: Standalone self-extracting administrator installer.
+            - **`WinAlign-Portable.zip`**: Zero-install portable edition.
+            - **`checksums.txt`**: SHA256 checksums for release verification.
+          files: |
+            WinAlign-Setup.exe
+            WinAlign-Portable.zip
+            checksums.txt
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
